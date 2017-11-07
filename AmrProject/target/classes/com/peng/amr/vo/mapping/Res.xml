@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.peng.amr.dao.IResDAO">
+	<resultMap type="Res" id="ResResultMap">
+		<id property="rid" column="rid"/>
+		<result property="title" column="title"/>
+		<result property="price" column="price"/>
+		<result property="indate" column="indate"/>
+		<result property="photo" column="photo"/>
+		<result property="rflag" column="rflag"/>
+		<result property="amount" column="amount"/>
+	</resultMap>
+</mapper>

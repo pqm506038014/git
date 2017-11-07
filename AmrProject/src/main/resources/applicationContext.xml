@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+  xmlns:context="http://www.springframework.org/schema/context" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:tx="http://www.springframework.org/schema/tx" 
+  xmlns:p="http://www.springframework.org/schema/p" 
+  xmlns:util="http://www.springframework.org/schema/util" 
+  xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+  xmlns:cache="http://www.springframework.org/schema/cache" 
+  xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:aop="http://www.springframework.org/schema/aop"
+  xsi:schemaLocation=" 
+  http://www.springframework.org/schema/aop 
+  http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+  http://www.springframework.org/schema/mvc 
+  http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd 
+  http://www.springframework.org/schema/context 
+  http://www.springframework.org/schema/context/spring-context.xsd 
+  http://www.springframework.org/schema/beans 
+  http://www.springframework.org/schema/beans/spring-beans.xsd 
+  http://www.springframework.org/schema/tx 
+  http://www.springframework.org/schema/tx/spring-tx.xsd " >
+ 
+	<context:annotation-config/>
+	<!-- 开启包扫描 -->
+	<context:component-scan base-package="com.peng.amr.service"></context:component-scan>
+	<context:component-scan base-package="com.peng.amr.dao"></context:component-scan>
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<!-- 指定数据库连接的资源文件的地址 -->
+	<context:property-placeholder location="classpath:dataSource.properties"/>
+	<!-- 配置数据源，可以使用数据源对象取得连接(c3p0连接池) -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+   		<property name="jdbcUrl" value="${db.jdbcUrl}"/>
+   		<property name="user" value="${db.user}"/>
+   		<property name="password" value="${db.password}"/>
+   		<property name="driverClass" value="${db.driverClass}"/>
+   		<!-- 表示在连接池中可以保存的最大连接数量 -->
+   		<property name="maxPoolSize" value="${db.maxPoolSize}"/>
+   		<!-- 表示在连接池中可以保存的最小连接数量 -->
+   		<property name="minPoolSize" value="${db.minPoolSize}"/>
+   		<!-- 表示初始化链接数量，启动的时候就创建好了20个连接保存到连接池中 -->
+   		<property name="initialPoolSize" value="${db.initialPoolSize}"/>
+   		<!-- 表示的是如果某个连接在1秒内没有被使用则自动释放 -->
+   		<property name="maxIdleTime" value="${db.maxIdleTime}"/>
+   </bean>
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<array>
+				<value>Messages</value>
+				<value>Validators</value>
+				<value>Pages</value>
+			</array>
+		</property>
+	</bean>
+	
+	<!-- 事务切点配置 -->
+	<!-- <aop:config>
+		<aop:pointcut expression="execution(* com.peng.amr.service..*.*(..))" id="defaultPointcut"/>
+		类似之前的切面
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="defaultPointcut"/>
+	</aop:config> -->
+	<!-- 配置事务管理器，这个管理器其实就是切面 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="add*" propagation="REQUIRED"/>
+			<tx:method name="remove*" propagation="REQUIRED"/>
+			<tx:method name="rm*" propagation="REQUIRED"/>
+			<tx:method name="edit*" propagation="REQUIRED"/>
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="change*" propagation="REQUIRED"/>
+			<tx:method name="delete*" propagation="REQUIRED"/>
+			<tx:method name="get*" propagation="REQUIRED" read-only="true"/>
+			<tx:method name="load*" propagation="REQUIRED" read-only="true"/>
+			<tx:method name="check*" propagation="REQUIRED" read-only="true"/>
+			<tx:method name="selete*" propagation="REQUIRED" read-only="true"/>
+			<tx:method name="login*" propagation="REQUIRED" read-only="true"/>
+			<tx:method name="*" propagation="REQUIRED" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	<!-- 注册sqlSessionFactory工厂 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<!-- 在之前单独使用mybatis的时候需要在mybatis.cfg.xml文件中使用mapper节点指定每一个vo类对应的映射文件的路径，如果类比较多的时候就显得
+		比较复杂，于是在spring中使用如下配置就可以默认指定这些映射文件的路径，但是映射文件的名称要和vo类的名称一样 -->
+		<property name="mapperLocations" value="classpath:com/peng/amr/vo/mapping/*.xml"/>
+		<!-- 指定mybatis的主配置文件的地址 -->
+		<property name="configLocation" value="classpath:mybatis.cfg.xml"></property>
+	</bean>
+	<!-- 配置dao层的接口实现类自动生成 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 指定dao层的接口所在包 -->
+		<property name="basePackage" value="com.peng.amr.dao"/>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+	</bean>
+</beans>

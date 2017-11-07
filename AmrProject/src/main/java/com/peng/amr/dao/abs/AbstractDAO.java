@@ -1,0 +1,17 @@
+package com.peng.amr.dao.abs;
+
+import javax.annotation.Resource;
+
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+
+public class AbstractDAO {
+	@Resource
+	private SqlSessionFactory factory;
+	public SqlSessionFactory getFactory() {
+		return factory;
+	}
+	public SqlSession getSession() {
+		return this.factory.openSession();
+	}
+}

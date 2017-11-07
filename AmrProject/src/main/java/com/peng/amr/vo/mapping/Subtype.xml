@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.peng.amr.dao.ISubtypeDAO">
+	<resultMap type="Subtype" id="SubtypeResultMap">
+		<id property="stid" column="stid"/>
+		<result property="title" column="title"/>
+		<association property="type" column="tid" resultMap="com.peng.amr.dao.ITypeDAO.TypeResultMap"/>
+	</resultMap>
+	<!-- 根据父类别编号查询子类别信息 -->
+	<select id="findAllByType" resultMap="SubtypeResultMap" parameterType="Integer">
+		SELECT stid,tid,title FROM subtype WHERE tid=#{pstid};
+	</select>
+</mapper>

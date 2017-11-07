@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.peng.amr.dao.IDetailsDAO">
+	<resultMap type="Details" id="DetailsResultMap">
+		<id property="did" column="did"/>
+		<result property="title" column="title"/>
+		<result property="price" column="price"/>
+		<result property="amount" column="amount"/>
+		<result property="photo" column="photo"/>
+		<result property="rflag" column="rflag"/>
+		<!-- 所属的父类别 -->
+		<association property="type" column="tid" resultMap="com.peng.amr.dao.ITypeDAO.TypeResultMap"/>
+		<!-- 所属的子类别信息 -->
+		<association property="subtype" column="stid" resultMap="com.peng.amr.dao.ISubtypeDAO.SubtypeResultMap"/>
+		<!-- 操作人的信息 -->
+		<association property="emp" column="eid" resultMap="com.peng.amr.dao.IEmpDAO.EmpResultMap"/>
+		<!-- 所属的办公用品的信息 -->
+		<association property="res" column="rid" resultMap="com.peng.amr.dao.IResDAO.ResResultMap"/>
+	</resultMap>
+	<!-- 增加代购清单 -->
+	<insert id="doCreate" parameterType="Details">
+		INSERT INTO details(tid,stid,eid,title,price,amount,photo,rflag,rid)
+		VALUES(#{type.tid},#{subtype.stid},#{emp.eid},#{title},#{price},#{amount},
+		#{photo},#{rflag},#{res.rid});
+	</insert>
+	<!-- 查询待购清单 -->
+	<select id="findAllDetails" parameterType="Integer" resultMap="DetailsResultMap">
+		SELECT did,tid,stid,eid,pid,rid,title,price,amount,photo,rflag
+		FROM details WHERE pid IS NULL AND eid=#{eid};
+	</select>
+	<!-- 在删除之前根据清单的编号进行查询 -->
+	<select id="findByPhoto" resultMap="DetailsResultMap">
+		SELECT did,eid,title,price,amount,photo,rflag FROM details
+		WHERE did IN
+		<foreach collection="list" open="(" separator="," close=")" item="ele">
+			#{ele}
+		</foreach>
+		AND rid IS NULL;
+	</select>
+	<!-- 根据待购清单编号批量删除清单 -->
+	<delete id="doRemoveBatch" parameterType="Integer">
+		DELETE FROM details WHERE did IN
+		<foreach collection="list" open="(" separator="," close=")" item="ele">
+			#{ele}
+		</foreach>
+	</delete>
+	<!-- 修改清单的数量,只有添加的人和该修改的人是同一人时才可以修改 -->
+	<update id="doUpdateAmount" parameterType="Details">
+		UPDATE details SET amount=#{amount} WHERE did=#{did} AND eid=#{emp.eid};
+	</update>
+	<!-- 编辑清单信息前的回显 -->
+	<select id="findByIdForPrebuy" resultMap="DetailsResultMap">
+		SELECT did,tid,stid,eid,pid,rid,title,price,amount,photo,rflag
+		FROM details WHERE did=#{0} AND eid=#{1} AND pid IS NULL AND rid IS NULL;
+	</select>
+	<!-- 实现清单的编辑 -->
+	<update id="doUpdatePrebuy" parameterType="Details">
+		UPDATE details SET
+		tid=#{type.tid},stid=#{subtype.stid},title=#{title},amount=#{amount},
+		price=#{price},photo=#{photo},rflag=#{rflag}
+		WHERE did=#{did} AND eid=#{emp.eid} AND pid IS NULL AND rid IS NULL;
+	</update>
+	<!-- 根据自增长的申请单的编号修改代购清单的pid -->
+	<update id="doUpdateByPurchase">
+		UPDATE details SET pid=#{0} WHERE eid=#{1} AND pid IS NULL;
+	</update>
+	<!-- 根据申请单的编号进行查询 -->
+	<select id="findAllByPurchase" parameterType="Integer" resultMap="DetailsResultMap">
+		SELECT did,tid,stid,eid,pid,rid,title,price,amount,photo,rflag
+		FROM details WHERE pid=#{pid};
+	</select>
+</mapper>
